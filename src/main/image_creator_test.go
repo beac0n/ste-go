@@ -15,7 +15,7 @@ func TestGetImagePerformance(t *testing.T) {
 	imageCreator := NewImageCreator(2048)
 
 	start := time.Now()
-	imageCreator.GetImage()
+	imageCreator.GenImage()
 	elapsed := time.Since(start)
 
 	if elapsed > time.Second*3 {
@@ -40,7 +40,7 @@ func TestGetImageRandomness(t *testing.T) {
 
 		seed := int64(i)
 		rand.Seed(seed)
-		imageCreator.GetImage()
+		imageCreator.GenImage()
 		hash := md5.New()
 		hash.Write(imageCreator.img.Pix)
 

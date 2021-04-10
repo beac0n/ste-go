@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"log"
 	"math/rand"
 	"os"
 	"time"
@@ -17,8 +18,8 @@ type ImageCreator struct {
 	img  *image.NRGBA
 }
 
-func NewImageCreator(size int) ImageCreator {
-	imageCreator := ImageCreator{halfSize: size}
+func NewImageCreator(halfSize int) ImageCreator {
+	imageCreator := ImageCreator{halfSize: halfSize}
 	imageCreator.randomize()
 	return imageCreator
 }
@@ -37,7 +38,7 @@ func (imageCreator *ImageCreator) randomize() {
 	imageCreator.rotate = rand.Intn(2)
 	imageCreator.tunnel = rand.Intn(2)
 
-	//log.Printf("%+v\n", imageCreator)
+	log.Printf("%+v\n", imageCreator)
 }
 
 func (imageCreator *ImageCreator) SavePNG(fileName string) {
@@ -54,7 +55,7 @@ func (imageCreator *ImageCreator) SavePNG(fileName string) {
 	}
 }
 
-func (imageCreator *ImageCreator) GetImage() {
+func (imageCreator *ImageCreator) GenImage() {
 	size := imageCreator.halfSize * 2
 	rect := image.Rect(0, 0, size, size)
 	img := image.NewNRGBA(rect)
@@ -76,9 +77,10 @@ func (imageCreator *ImageCreator) GetImage() {
 		pixelSetter.GenLineColor()
 		for y := 0; y <= imageCreator.halfSize; y++ {
 			if imageCreator.reverseRows == 0 {
-				x, y = ReverseValues(x, y)
+				pixelSetter.SetPixels(x, y)
+			} else {
+				pixelSetter.SetPixels(y, x)
 			}
-			pixelSetter.SetPixels(x, y)
 		}
 	}
 
