@@ -18,16 +18,14 @@ type ImageCreator struct {
 }
 
 func NewImageCreator(size int) ImageCreator {
-	imageCreator := ImageCreator{}
+	imageCreator := ImageCreator{halfSize: size}
 	imageCreator.randomize()
-	imageCreator.halfSize = size
 	return imageCreator
 }
 
 func (imageCreator *ImageCreator) randomize() {
-	seed := time.Now().UTC().UnixNano()
-	imageCreator.seed = seed
-	rand.Seed(seed)
+	imageCreator.seed = time.Now().UTC().UnixNano()
+	rand.Seed(imageCreator.seed)
 
 	imageCreator.reverseForm = rand.Intn(2)
 	imageCreator.reverseAlpha = rand.Intn(2)
