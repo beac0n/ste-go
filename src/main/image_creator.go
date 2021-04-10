@@ -12,10 +12,15 @@ import (
 )
 
 type ImageCreator struct {
-	halfSize, reverseForm, reverseAlpha, reverseRows, colorCombination,
-	invert, saturation, contrast, rotate, tunnel int
-	seed int64
-	img  *image.NRGBA
+	halfSize int
+	seed     int64
+	img      *image.NRGBA
+	flags    ImageGenFlags
+}
+
+type ImageGenFlags struct {
+	patterLineWidth, patternModifier                                                                       float64
+	reverseForm, reverseAlpha, reverseRows, colorCombination, invert, saturation, contrast, rotate, tunnel int
 }
 
 func NewImageCreator(halfSize int) ImageCreator {
@@ -28,15 +33,19 @@ func (imageCreator *ImageCreator) randomize() {
 	imageCreator.seed = time.Now().UTC().UnixNano()
 	rand.Seed(imageCreator.seed)
 
-	imageCreator.reverseForm = rand.Intn(2)
-	imageCreator.reverseAlpha = rand.Intn(2)
-	imageCreator.reverseRows = rand.Intn(2)
-	imageCreator.colorCombination = rand.Intn(4)
-	imageCreator.invert = rand.Intn(2)
-	imageCreator.saturation = rand.Intn(30)
-	imageCreator.contrast = rand.Intn(30)
-	imageCreator.rotate = rand.Intn(2)
-	imageCreator.tunnel = rand.Intn(2)
+	imageCreator.flags = ImageGenFlags{
+		reverseForm:      rand.Intn(2),
+		reverseAlpha:     rand.Intn(2),
+		reverseRows:      rand.Intn(2),
+		colorCombination: rand.Intn(4),
+		invert:           rand.Intn(2),
+		saturation:       rand.Intn(30),
+		contrast:         rand.Intn(30),
+		rotate:           rand.Intn(2),
+		tunnel:           rand.Intn(2),
+		patterLineWidth:  float64(rand.Intn(5) + 2),
+		patternModifier:  float64(rand.Intn(6) + 5),
+	}
 
 	log.Printf("%+v\n", imageCreator)
 }
@@ -63,20 +72,18 @@ func (imageCreator *ImageCreator) GenImage() {
 	red, green, blue := GetRandomRGB()
 
 	pixelSetter := PixelSetter{
-		size:             imageCreator.halfSize,
-		reverseForm:      imageCreator.reverseForm,
-		reverseAlpha:     imageCreator.reverseAlpha,
-		colorCombination: imageCreator.colorCombination,
-		red:              red,
-		green:            green,
-		blue:             blue,
-		img:              img,
+		flags:    imageCreator.flags,
+		halfSize: imageCreator.halfSize,
+		red:      red,
+		green:    green,
+		blue:     blue,
+		img:      img,
 	}
 
 	for x := 0; x <= imageCreator.halfSize; x++ {
 		pixelSetter.GenLineColor()
 		for y := 0; y <= imageCreator.halfSize; y++ {
-			if imageCreator.reverseRows == 0 {
+			if imageCreator.flags.reverseRows == 0 {
 				pixelSetter.SetPixels(x, y)
 			} else {
 				pixelSetter.SetPixels(y, x)
@@ -85,26 +92,26 @@ func (imageCreator *ImageCreator) GenImage() {
 	}
 
 	brightnessDiff := float64(25)
-	if imageCreator.invert == 1 {
+	if imageCreator.flags.invert == 1 {
 		img = imaging.Invert(img)
 		img = imaging.AdjustBrightness(img, -brightnessDiff)
 	} else {
 		img = imaging.AdjustBrightness(img, brightnessDiff)
 	}
 
-	img = imaging.AdjustSaturation(img, float64(imageCreator.saturation))
-	img = imaging.AdjustContrast(img, float64(imageCreator.contrast))
+	img = imaging.AdjustSaturation(img, float64(imageCreator.flags.saturation))
+	img = imaging.AdjustContrast(img, float64(imageCreator.flags.contrast))
 
 	cropSize := int(float32(imageCreator.halfSize) * 1.4)
 
-	if imageCreator.rotate == 1 {
+	if imageCreator.flags.rotate == 1 {
 		img = imaging.Rotate(img, 45, color.Black)
 
 		img = imaging.CropCenter(img, cropSize, cropSize)
 		img = imaging.Resize(img, size, size, imaging.Lanczos)
 	}
 
-	if imageCreator.rotate == 1 && imageCreator.tunnel == 1 {
+	if imageCreator.flags.rotate == 1 && imageCreator.flags.tunnel == 1 {
 		quarterSize := imageCreator.halfSize / 2
 		for i := 0; i < 5; i++ {
 			cropped := imaging.Resize(img, imageCreator.halfSize, imageCreator.halfSize, imaging.Lanczos)

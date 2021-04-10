@@ -3,12 +3,14 @@ package main
 import (
 	"image"
 	"image/color"
+	"math"
 )
 
 type PixelSetter struct {
-	size, reverseForm, reverseAlpha, colorCombination int
-	red, green, blue, redLine, greenLine, blueLine    uint8
-	img                                               *image.NRGBA
+	halfSize                                       int
+	red, green, blue, redLine, greenLine, blueLine uint8
+	img                                            *image.NRGBA
+	flags                                          ImageGenFlags
 }
 
 func (ps *PixelSetter) GenLineColor() {
@@ -21,10 +23,46 @@ func (ps *PixelSetter) GenLineColor() {
 func (ps *PixelSetter) SetPixels(x, y int) {
 	baseColor := ps.getBaseColor(x, y)
 
-	ps.img.SetNRGBA(x, y, ps.createColorRGBA(baseColor))
-	ps.img.SetNRGBA(2*ps.size-x, y, ps.createColorRGBA(baseColor))
-	ps.img.SetNRGBA(x, 2*ps.size-y, ps.createColorRGBA(baseColor))
-	ps.img.SetNRGBA(2*ps.size-x, 2*ps.size-y, ps.createColorRGBA(baseColor))
+	topLeft := ps.createColorRGBA(baseColor)
+	bottomLeft := ps.createColorRGBA(baseColor)
+	topRight := ps.createColorRGBA(baseColor)
+	bottomRight := ps.createColorRGBA(baseColor)
+
+	if ps.flags.rotate == 1 && (ps.calcPatternMatch(x, y) || ps.calcPatternMatch(y, x)) {
+		patternColor := color.NRGBA{
+			A: 255,
+			R: ps.blue & GetRandomColorValue(),
+			G: ps.red & GetRandomColorValue(),
+			B: ps.green & GetRandomColorValue(),
+		}
+		topLeft = patternColor
+		bottomLeft = patternColor
+		topRight = patternColor
+		bottomRight = patternColor
+	}
+
+	ps.img.SetNRGBA(x, y, topLeft)
+	ps.img.SetNRGBA(2*ps.halfSize-x, y, bottomLeft)
+	ps.img.SetNRGBA(x, 2*ps.halfSize-y, topRight)
+	ps.img.SetNRGBA(2*ps.halfSize-x, 2*ps.halfSize-y, bottomRight)
+}
+
+func (ps *PixelSetter) calcPatternMatch(x int, y int) bool {
+	xRev := float64(ps.halfSize - x)
+	yRev := float64(ps.halfSize - y)
+
+	lineWidth := ps.flags.patterLineWidth
+	zModifier := ps.flags.patternModifier
+	z0 := float64(ps.halfSize) / zModifier
+	z1 := float64(ps.halfSize) * 0.9
+
+	expectedX0 := math.Sin((xRev/z0)-math.Pi) * z1
+	expectedX1 := math.Sin(xRev/z0) * z1
+
+	isOnLine0 := expectedX0 >= yRev-lineWidth && expectedX0 <= yRev+lineWidth
+	isOnLine1 := expectedX1 >= yRev-lineWidth && expectedX1 <= yRev+lineWidth
+
+	return isOnLine0 || isOnLine1
 }
 
 func (ps *PixelSetter) createColorRGBA(baseColor uint8) color.NRGBA {
@@ -37,7 +75,7 @@ func (ps *PixelSetter) createColorRGBA(baseColor uint8) color.NRGBA {
 	}
 
 	for i := 0; i < 3; i++ {
-		if i != ps.colorCombination {
+		if i != ps.flags.colorCombination {
 			rgb[i] = baseColor ^ rgb[i]
 		} else {
 			rgb[i] = baseColor & rgb[i]
@@ -50,13 +88,13 @@ func (ps *PixelSetter) createColorRGBA(baseColor uint8) color.NRGBA {
 func (ps *PixelSetter) getBaseColor(x int, y int) uint8 {
 	var alpha uint8
 
-	if ps.reverseForm == 1 {
+	if ps.flags.reverseForm == 1 {
 		alpha = uint8(x - y)
 	} else {
 		alpha = uint8(x + y)
 	}
 
-	if ps.reverseAlpha == 1 {
+	if ps.flags.reverseAlpha == 1 {
 		alpha = 255 - alpha
 	}
 
