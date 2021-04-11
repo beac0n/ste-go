@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 	"image/png"
-	"log"
 	"math/rand"
 	"os"
 	"time"
@@ -19,8 +18,9 @@ type ImageCreator struct {
 }
 
 type ImageGenFlags struct {
-	patterLineWidth, patternModifier                                                                       float64
-	reverseForm, reverseAlpha, reverseRows, colorCombination, invert, saturation, contrast, rotate, tunnel int
+	patterLineWidth, patternModifier float64
+	reverseForm, reverseAlpha, reverseRows, colorCombination,
+	invert, saturation, contrast, rotate, tunnel, pattern int
 }
 
 func NewImageCreator(halfSize int) ImageCreator {
@@ -43,11 +43,12 @@ func (imageCreator *ImageCreator) randomize() {
 		contrast:         rand.Intn(30),
 		rotate:           rand.Intn(2),
 		tunnel:           rand.Intn(2),
+		pattern:          rand.Intn(2),
 		patterLineWidth:  float64(rand.Intn(5) + 2),
 		patternModifier:  float64(rand.Intn(6) + 5),
 	}
 
-	log.Printf("%+v\n", imageCreator)
+	//log.Printf("%+v\n", imageCreator)
 }
 
 func (imageCreator *ImageCreator) SavePNG(fileName string) {
@@ -72,12 +73,13 @@ func (imageCreator *ImageCreator) GenImage() {
 	red, green, blue := GetRandomRGB()
 
 	pixelSetter := PixelSetter{
-		flags:    imageCreator.flags,
-		halfSize: imageCreator.halfSize,
-		red:      red,
-		green:    green,
-		blue:     blue,
-		img:      img,
+		referenceSize: 512,
+		halfSize:      imageCreator.halfSize,
+		flags:         imageCreator.flags,
+		red:           red,
+		green:         green,
+		blue:          blue,
+		img:           img,
 	}
 
 	for x := 0; x <= imageCreator.halfSize; x++ {

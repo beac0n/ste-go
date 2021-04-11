@@ -7,10 +7,10 @@ import (
 )
 
 type PixelSetter struct {
-	halfSize                                       int
-	red, green, blue, redLine, greenLine, blueLine uint8
-	img                                            *image.NRGBA
-	flags                                          ImageGenFlags
+	referenceSize, halfSize                                  int
+	minAlpha, red, green, blue, redLine, greenLine, blueLine uint8
+	img                                                      *image.NRGBA
+	flags                                                    ImageGenFlags
 }
 
 func (ps *PixelSetter) GenLineColor() {
@@ -28,17 +28,11 @@ func (ps *PixelSetter) SetPixels(x, y int) {
 	topRight := ps.createColorRGBA(baseColor)
 	bottomRight := ps.createColorRGBA(baseColor)
 
-	if ps.flags.rotate == 1 && (ps.calcPatternMatch(x, y) || ps.calcPatternMatch(y, x)) {
-		patternColor := color.NRGBA{
-			A: 255,
-			R: ps.blue & GetRandomColorValue(),
-			G: ps.red & GetRandomColorValue(),
-			B: ps.green & GetRandomColorValue(),
-		}
-		topLeft = patternColor
-		bottomLeft = patternColor
-		topRight = patternColor
-		bottomRight = patternColor
+	if ps.flags.rotate == 1 && ps.flags.pattern == 1 && (ps.calcPatternMatch(x, y) || ps.calcPatternMatch(y, x)) {
+		topLeft = GetRandomPixel()
+		bottomLeft = GetRandomPixel()
+		topRight = GetRandomPixel()
+		bottomRight = GetRandomPixel()
 	}
 
 	ps.img.SetNRGBA(x, y, topLeft)
@@ -51,7 +45,7 @@ func (ps *PixelSetter) calcPatternMatch(x int, y int) bool {
 	xRev := float64(ps.halfSize - x)
 	yRev := float64(ps.halfSize - y)
 
-	lineWidth := ps.flags.patterLineWidth
+	lineWidth := ps.flags.patterLineWidth * float64(ps.halfSize/ps.referenceSize)
 	zModifier := ps.flags.patternModifier
 	z0 := float64(ps.halfSize) / zModifier
 	z1 := float64(ps.halfSize) * 0.9
@@ -86,22 +80,20 @@ func (ps *PixelSetter) createColorRGBA(baseColor uint8) color.NRGBA {
 }
 
 func (ps *PixelSetter) getBaseColor(x int, y int) uint8 {
-	var alpha uint8
-
 	if ps.flags.reverseForm == 1 {
-		alpha = uint8(x - y)
-	} else {
-		alpha = uint8(x + y)
+		y *= -1
 	}
+
+	alphaModifier := float64(ps.referenceSize) / float64(ps.halfSize)
+	alpha := uint8(float64(x+y) * alphaModifier)
 
 	if ps.flags.reverseAlpha == 1 {
 		alpha = 255 - alpha
 	}
 
-	minAlpha := uint8(50)
-	if alpha < minAlpha {
-		return minAlpha
-	} else {
-		return alpha
+	if alpha < ps.minAlpha {
+		alpha = ps.minAlpha
 	}
+
+	return alpha
 }

@@ -35,11 +35,10 @@ func TestGetImageRandomness(t *testing.T) {
 
 	collisions := 0
 
+	rand.Seed(int64(1))
+
 	for i := 0; i < imgSize*2*imgSize*2*255; i++ {
 		imageCreator := NewImageCreator(imgSize)
-
-		seed := int64(i)
-		rand.Seed(seed)
 		imageCreator.GenImage()
 		hash := md5.New()
 		hash.Write(imageCreator.img.Pix)
@@ -49,7 +48,8 @@ func TestGetImageRandomness(t *testing.T) {
 
 		if _, isPresent := hashMap[hexSum]; isPresent {
 			collisions += 1
-			imageCreator.SavePNG(testImgsFolder + "/" + hexSum + "_" + strconv.Itoa(i) + "_" + strconv.FormatInt(seed, 10))
+			imageCreator.SavePNG(testImgsFolder + "/" + hexSum + "_" + strconv.Itoa(i))
+			break
 		} else {
 			hashMap[hexSum] = struct{}{}
 		}
