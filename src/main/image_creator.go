@@ -41,8 +41,8 @@ func (imageCreator *ImageCreator) randomize() {
 		invert:           rand.Intn(2),
 		saturation:       rand.Intn(30),
 		contrast:         rand.Intn(30),
-		rotate:           rand.Intn(2),
-		tunnel:           rand.Intn(2),
+		rotate:           1, //rand.Intn(2),
+		tunnel:           1, //rand.Intn(2),
 		pattern:          rand.Intn(2),
 		patterLineWidth:  float64(rand.Intn(5) + 2),
 		patternModifier:  float64(rand.Intn(6) + 5),
@@ -114,10 +114,10 @@ func (imageCreator *ImageCreator) GenImage() {
 	}
 
 	if imageCreator.flags.rotate == 1 && imageCreator.flags.tunnel == 1 {
-		quarterSize := imageCreator.halfSize / 2
+		tunnelPosition := imageCreator.halfSize / 2
 		for i := 0; i < 5; i++ {
 			cropped := imaging.Resize(img, imageCreator.halfSize, imageCreator.halfSize, imaging.Lanczos)
-			img = imaging.Overlay(img, cropped, image.Pt(quarterSize, quarterSize), 1.0)
+			img = imaging.Overlay(img, cropped, image.Pt(tunnelPosition, tunnelPosition), 1.0)
 		}
 	}
 

@@ -12,13 +12,13 @@ import (
 )
 
 func TestGetImagePerformance(t *testing.T) {
-	imageCreator := NewImageCreator(2048)
+	imageCreator := NewImageCreator(64)
 
 	start := time.Now()
 	imageCreator.GenImage()
 	elapsed := time.Since(start)
 
-	if elapsed > time.Second*3 {
+	if elapsed > time.Millisecond*10 {
 		t.Error("took too long:", elapsed)
 	} else {
 		log.Println("took", elapsed)
