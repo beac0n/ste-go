@@ -11,6 +11,57 @@ import (
 	"time"
 )
 
+func TestDataEncodingTooMuchData(t *testing.T) {
+	imgHalfSize := 8
+	imageCreator := NewImageCreator(imgHalfSize)
+	imageCreator.GenImage()
+
+	letterRunes := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+	runesArr := make([]rune, ((imgHalfSize*4)*(imgHalfSize*4)-32)/8+1)
+	for i := range runesArr {
+		runesArr[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+
+	expectedData := string(runesArr)
+	if err := imageCreator.Encode([]byte(expectedData)); err == nil {
+		t.Error("Expected error")
+	}
+}
+
+func TestDataEncoding(t *testing.T) {
+	imgHalfSize := 128
+	imageCreator := NewImageCreator(imgHalfSize)
+	imageCreator.GenImage()
+
+	imageCreator.SavePNG("unencoded_image")
+
+	letterRunes := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+	runesArr := make([]rune, ((imgHalfSize*4)*(imgHalfSize*4)-32)/8)
+	for i := range runesArr {
+		runesArr[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+
+	expectedData := string(runesArr)
+	err := imageCreator.Encode([]byte(expectedData))
+	if err != nil {
+		t.Error("failed to encode", err)
+	}
+
+	imageCreator.SavePNG("encoded_image")
+
+	data, err := imageCreator.Decode(imageCreator.img)
+	if err != nil {
+		t.Error("failed to decode", err)
+	}
+
+	actualData := string(data)
+	if actualData != expectedData {
+		t.Error("expected", expectedData, "but got", actualData)
+	}
+}
+
 func TestGetImagePerformance(t *testing.T) {
 	imageCreator := NewImageCreator(64)
 

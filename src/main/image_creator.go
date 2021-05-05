@@ -1,12 +1,16 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"github.com/disintegration/imaging"
 	"image"
 	"image/color"
 	"image/png"
+	"math"
 	"math/rand"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -62,6 +66,76 @@ func (imageCreator *ImageCreator) SavePNG(fileName string) {
 
 	if err != nil {
 		panic(err)
+	}
+}
+
+func (imageCreator *ImageCreator) Encode(data []byte) error {
+	if imageCreator.img == nil {
+		return errors.New("no image to encode data in")
+	}
+
+	fullSize := imageCreator.halfSize * 4
+	maximumDataLength := (fullSize*fullSize - 32) / 8
+
+	if len(data) >= maximumDataLength {
+		return errors.New("length of provided data is bigger than the maximum length: " + strconv.Itoa(maximumDataLength))
+	}
+
+	for i, dataLengthBitChar := range fmt.Sprintf("%032b", len(data)*8) {
+		dataLengthBit := byte(int(dataLengthBitChar - '0'))
+		imageCreator.encodeBitInByte(i, dataLengthBit)
+	}
+
+	bitIndex := 32
+	for _, dataByte := range data {
+		for j := 0; j < 8; j++ {
+			bitmask := byte(math.Exp2(float64(j)))
+			maskedDataByte := dataByte & bitmask
+			dataBit := byte(0)
+			if maskedDataByte > 0 {
+				dataBit = byte(1)
+			}
+
+			// make sure to skip A values
+			imageCreator.encodeBitInByte(bitIndex, dataBit)
+			bitIndex++
+		}
+	}
+
+	return nil
+}
+
+func (imageCreator *ImageCreator) Decode(img *image.NRGBA) ([]byte, error) {
+	if img == nil {
+		return nil, errors.New("no image provided")
+	}
+
+	dataInBitsLength := 0
+	for i := 0; i < 32; i++ {
+		encodedBit := int(img.Pix[i] & 1)
+		dataInBitsLength += encodedBit * int(math.Exp2(float64(31-i)))
+	}
+
+	data := make([]byte, dataInBitsLength/8)
+
+	dataBitIndex := dataInBitsLength + 32
+	for i := 32; i < dataBitIndex; i += 8 {
+		encodedByte := byte(0)
+		for j := 0; j < 8; j++ {
+			encodedBit := img.Pix[i+j] & 1
+			encodedByte += encodedBit * byte(math.Exp2(float64(j)))
+		}
+		data[(i-32)/8] = encodedByte
+	}
+
+	return data, nil
+}
+
+func (imageCreator *ImageCreator) encodeBitInByte(byteIndex int, bit byte) {
+	if bit == 0 {
+		imageCreator.img.Pix[byteIndex] = imageCreator.img.Pix[byteIndex] & 254
+	} else {
+		imageCreator.img.Pix[byteIndex] = imageCreator.img.Pix[byteIndex] | 1
 	}
 }
 
