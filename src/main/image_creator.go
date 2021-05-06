@@ -77,8 +77,8 @@ func (imageCreator *ImageCreator) Encode(data []byte) error {
 	fullSize := imageCreator.halfSize * 4
 	maximumDataLength := (fullSize*fullSize - 32) / 8
 
-	if len(data) >= maximumDataLength {
-		return errors.New("length of provided data is bigger than the maximum length: " + strconv.Itoa(maximumDataLength))
+	if len(data) > maximumDataLength {
+		return errors.New("length of provided data (" + strconv.Itoa(len(data)) + ") is bigger than the maximum length: " + strconv.Itoa(maximumDataLength))
 	}
 
 	for i, dataLengthBitChar := range fmt.Sprintf("%032b", len(data)*8) {

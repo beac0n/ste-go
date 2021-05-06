@@ -12,7 +12,7 @@ import (
 )
 
 func TestDataEncodingTooMuchData(t *testing.T) {
-	imgHalfSize := 8
+	imgHalfSize := 128
 	imageCreator := NewImageCreator(imgHalfSize)
 	imageCreator.GenImage()
 
@@ -34,7 +34,8 @@ func TestDataEncoding(t *testing.T) {
 	imageCreator := NewImageCreator(imgHalfSize)
 	imageCreator.GenImage()
 
-	imageCreator.SavePNG("unencoded_image")
+	_ = os.MkdirAll("../test_imgs/", os.ModePerm)
+	imageCreator.SavePNG("../test_imgs/unencoded_image")
 
 	letterRunes := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
@@ -47,13 +48,15 @@ func TestDataEncoding(t *testing.T) {
 	err := imageCreator.Encode([]byte(expectedData))
 	if err != nil {
 		t.Error("failed to encode", err)
+		return
 	}
 
-	imageCreator.SavePNG("encoded_image")
+	imageCreator.SavePNG("../test_imgs/encoded_image")
 
 	data, err := imageCreator.Decode(imageCreator.img)
 	if err != nil {
 		t.Error("failed to decode", err)
+		return
 	}
 
 	actualData := string(data)
