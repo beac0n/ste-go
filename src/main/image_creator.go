@@ -55,6 +55,11 @@ func (imageCreator *ImageCreator) randomize() {
 	//log.Printf("%+v\n", imageCreator)
 }
 
+func (imageCreator *ImageCreator) GetMaxLengthEncodeBytes() int {
+	fullSize := imageCreator.halfSize * 4
+	return (fullSize*fullSize - 32) / 8
+}
+
 func (imageCreator *ImageCreator) SavePNG(fileName string) {
 	file, err := os.Create(fileName + ".png")
 	if err != nil {
@@ -74,9 +79,7 @@ func (imageCreator *ImageCreator) Encode(data []byte) error {
 		return errors.New("no image to encode data in")
 	}
 
-	fullSize := imageCreator.halfSize * 4
-	maximumDataLength := (fullSize*fullSize - 32) / 8
-
+	maximumDataLength := imageCreator.GetMaxLengthEncodeBytes()
 	if len(data) > maximumDataLength {
 		return errors.New("length of provided data (" + strconv.Itoa(len(data)) + ") is bigger than the maximum length: " + strconv.Itoa(maximumDataLength))
 	}

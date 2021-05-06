@@ -18,7 +18,7 @@ func TestDataEncodingTooMuchData(t *testing.T) {
 
 	letterRunes := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-	runesArr := make([]rune, ((imgHalfSize*4)*(imgHalfSize*4)-32)/8+1)
+	runesArr := make([]rune, imageCreator.GetMaxLengthEncodeBytes()+1)
 	for i := range runesArr {
 		runesArr[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
@@ -39,7 +39,7 @@ func TestDataEncoding(t *testing.T) {
 
 	letterRunes := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-	runesArr := make([]rune, ((imgHalfSize*4)*(imgHalfSize*4)-32)/8)
+	runesArr := make([]rune, imageCreator.GetMaxLengthEncodeBytes())
 	for i := range runesArr {
 		runesArr[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
