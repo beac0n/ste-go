@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"ste-go/src/image-creator"
 	"strconv"
 	"testing"
 	"time"
@@ -13,7 +14,7 @@ import (
 
 func TestDataEncodingTooMuchData(t *testing.T) {
 	imgHalfSize := 128
-	imageCreator := NewImageCreator(imgHalfSize)
+	imageCreator := image_creator.NewImageCreator(imgHalfSize)
 	imageCreator.GenImage()
 
 	letterRunes := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -31,7 +32,7 @@ func TestDataEncodingTooMuchData(t *testing.T) {
 
 func TestDataEncoding(t *testing.T) {
 	imgHalfSize := 128
-	imageCreator := NewImageCreator(imgHalfSize)
+	imageCreator := image_creator.NewImageCreator(imgHalfSize)
 	imageCreator.GenImage()
 
 	_ = os.MkdirAll("../test_imgs/", os.ModePerm)
@@ -53,7 +54,7 @@ func TestDataEncoding(t *testing.T) {
 
 	imageCreator.SavePNG("../test_imgs/encoded_image")
 
-	data, err := imageCreator.Decode(imageCreator.img)
+	data, err := image_creator.Decode(imageCreator.Img)
 	if err != nil {
 		t.Error("failed to decode", err)
 		return
@@ -66,7 +67,7 @@ func TestDataEncoding(t *testing.T) {
 }
 
 func TestGetImagePerformance(t *testing.T) {
-	imageCreator := NewImageCreator(64)
+	imageCreator := image_creator.NewImageCreator(64)
 
 	start := time.Now()
 	imageCreator.GenImage()
@@ -92,10 +93,10 @@ func TestGetImageRandomness(t *testing.T) {
 	rand.Seed(int64(1))
 
 	for i := 0; i < imgSize*2*imgSize*2*255; i++ {
-		imageCreator := NewImageCreator(imgSize)
+		imageCreator := image_creator.NewImageCreator(imgSize)
 		imageCreator.GenImage()
 		hash := md5.New()
-		hash.Write(imageCreator.img.Pix)
+		hash.Write(imageCreator.Img.Pix)
 
 		sum := hash.Sum(nil)
 		hexSum := hex.EncodeToString(sum)

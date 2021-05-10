@@ -1,4 +1,4 @@
-package main
+package image_creator
 
 import (
 	"errors"
@@ -17,7 +17,7 @@ import (
 type ImageCreator struct {
 	halfSize int
 	seed     int64
-	img      *image.NRGBA
+	Img      *image.NRGBA
 	flags    ImageGenFlags
 }
 
@@ -60,14 +60,14 @@ func (imageCreator *ImageCreator) GetMaxLengthEncodeBytes() int {
 	return (fullSize*fullSize - 32) / 8
 }
 
-func (imageCreator *ImageCreator) SavePNG(fileName string) {
-	file, err := os.Create(fileName + ".png")
+func (imageCreator *ImageCreator) SavePNG(filePath string) {
+	file, err := os.Create(filePath + ".png")
 	if err != nil {
 		panic(err)
 	}
 
 	encoder := &png.Encoder{CompressionLevel: png.NoCompression}
-	err = encoder.Encode(file, imageCreator.img)
+	err = encoder.Encode(file, imageCreator.Img)
 
 	if err != nil {
 		panic(err)
@@ -75,7 +75,7 @@ func (imageCreator *ImageCreator) SavePNG(fileName string) {
 }
 
 func (imageCreator *ImageCreator) Encode(data []byte) error {
-	if imageCreator.img == nil {
+	if imageCreator.Img == nil {
 		return errors.New("no image to encode data in")
 	}
 
@@ -108,7 +108,7 @@ func (imageCreator *ImageCreator) Encode(data []byte) error {
 	return nil
 }
 
-func (imageCreator *ImageCreator) Decode(img *image.NRGBA) ([]byte, error) {
+func Decode(img *image.NRGBA) ([]byte, error) {
 	if img == nil {
 		return nil, errors.New("no image provided")
 	}
@@ -136,9 +136,9 @@ func (imageCreator *ImageCreator) Decode(img *image.NRGBA) ([]byte, error) {
 
 func (imageCreator *ImageCreator) encodeBitInByte(byteIndex int, bit byte) {
 	if bit == 0 {
-		imageCreator.img.Pix[byteIndex] = imageCreator.img.Pix[byteIndex] & 254
+		imageCreator.Img.Pix[byteIndex] = imageCreator.Img.Pix[byteIndex] & 254
 	} else {
-		imageCreator.img.Pix[byteIndex] = imageCreator.img.Pix[byteIndex] | 1
+		imageCreator.Img.Pix[byteIndex] = imageCreator.Img.Pix[byteIndex] | 1
 	}
 }
 
@@ -198,5 +198,5 @@ func (imageCreator *ImageCreator) GenImage() {
 		}
 	}
 
-	imageCreator.img = img
+	imageCreator.Img = img
 }
