@@ -14,10 +14,9 @@ func main() {
 	// TODO: add arguments
 	// 	- flags
 
-	dataFilePath := flag.String("data-file-path", "", "path to file to encode in image(s) or path to image with data")
+	dataFilePath := flag.String("data-file-path", "", "path to file to encode in image(s) or path to image with encoded data")
 	encode := flag.Bool("encode", true, "encode data (default)")
 	decode := flag.Bool("decode", false, "decode data")
-	imageSize := flag.Int64("image-size", int64(512), "quarter size of image to encode data in")
 
 	flag.Parse()
 
@@ -26,15 +25,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	if _, err := os.Stat(*dataFilePath); os.IsNotExist(err) {
-		fmt.Println("ERROR:", *dataFilePath, "does not exist")
-		os.Exit(1)
+	fileStat, err := os.Stat(*dataFilePath)
+	if os.IsNotExist(err) {
+		printAndExit("ERROR: "+*dataFilePath+" does not exist", err)
 	}
 
-	if *encode && !*decode {
-		encodeData(*dataFilePath, *imageSize)
-	} else if *decode {
+	if *decode {
 		decodeData(*dataFilePath)
+	} else if *encode {
+		fileSize := fileStat.Size()
+		imgSize := image_creator.GetImageSizeForByteLength(fileSize)
+		encodeData(*dataFilePath, imgSize)
 	}
 }
 
@@ -43,34 +44,35 @@ func decodeData(dataFilePath string) {
 	defer f.Close()
 	img, _, err := image.Decode(f)
 	if err != nil {
-		fmt.Println("ERROR: could not read file to image:", err)
-		os.Exit(1)
+		printAndExit("ERROR: could not read file to image:", err)
 	}
 	data, err := image_creator.Decode(img.(*image.NRGBA))
 	if err != nil {
-		fmt.Println("ERROR: could not decode image to NRGBA:", err)
-		os.Exit(1)
+		printAndExit("ERROR: could not decode image to NRGBA:", err)
 	}
 
 	decodedFilePath := strings.ReplaceAll(dataFilePath, ".encoded.png", "")
 	if err = os.WriteFile(decodedFilePath, data, 0666); err != nil {
-		fmt.Println("ERROR: could not write decoded file:", err)
+		printAndExit("ERROR: could not write decoded file:", err)
 	}
 }
 
 func encodeData(dataFilePath string, imageSize int64) {
 	data, err := ioutil.ReadFile(dataFilePath)
 	if err != nil {
-		fmt.Println("ERROR: reading file", dataFilePath, ":", err)
-		os.Exit(1)
+		printAndExit("ERROR: reading file"+dataFilePath+":", err)
 	}
 
 	imageCreator := image_creator.NewImageCreator(int(imageSize))
 	imageCreator.GenImage()
 	if err = imageCreator.Encode(data); err != nil {
-		fmt.Println("ERROR: encoding data in image:", err)
-		os.Exit(1)
+		printAndExit("ERROR: encoding data in image:", err)
 	}
 
 	imageCreator.SavePNG((dataFilePath) + ".encoded")
+}
+
+func printAndExit(msg string, err error) {
+	fmt.Println(msg, err)
+	os.Exit(1)
 }

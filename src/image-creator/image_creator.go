@@ -60,6 +60,12 @@ func (imageCreator *ImageCreator) GetMaxLengthEncodeBytes() int {
 	return (fullSize*fullSize - 32) / 8
 }
 
+func GetImageSizeForByteLength(length int64) int64 {
+	fullSize := math.Sqrt(float64((length * 8) + 32))
+	return int64(math.Ceil(fullSize / 4))
+
+}
+
 func (imageCreator *ImageCreator) SavePNG(filePath string) {
 	file, err := os.Create(filePath + ".png")
 	if err != nil {
