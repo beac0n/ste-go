@@ -69,7 +69,9 @@ func encodeData(dataFilePath string, imageSize int64) {
 		printAndExit("ERROR: encoding data in image:", err)
 	}
 
-	imageCreator.SavePNG((dataFilePath) + ".encoded")
+	if err = imageCreator.SavePNG((dataFilePath) + ".encoded"); err != nil {
+		printAndExit("ERROR: could not save image:", err)
+	}
 }
 
 func printAndExit(msg string, err error) {

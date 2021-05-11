@@ -66,18 +66,21 @@ func GetImageSizeForByteLength(length int64) int64 {
 
 }
 
-func (imageCreator *ImageCreator) SavePNG(filePath string) {
+func (imageCreator *ImageCreator) SavePNG(filePath string) error {
 	file, err := os.Create(filePath + ".png")
 	if err != nil {
-		panic(err)
+		return err
 	}
+	defer file.Close()
 
 	encoder := &png.Encoder{CompressionLevel: png.NoCompression}
 	err = encoder.Encode(file, imageCreator.Img)
 
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
 
 func (imageCreator *ImageCreator) Encode(data []byte) error {
